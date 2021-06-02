@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Imports
-. ./local/constants.sh
-. ./local/util.sh
+. ./fs/constants.sh
+. ./fs/util.sh
 
 ###############################################################################
 # All the git related commands and functions.                                 #

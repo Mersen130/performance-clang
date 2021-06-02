@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Imports
-. ./local/constants.sh
-. ./local/util.sh
+. ./fs/constants.sh
+. ./fs/util.sh
 
 ###############################################################################
 # All the build related commands and functions.                               #
