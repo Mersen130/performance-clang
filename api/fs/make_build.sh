@@ -36,12 +36,16 @@ make_new_build_dir() {
 
 # Run the cmake configuration for the new build
 config_cmake() {
-  echo -n Configuring cmake
   cd ${BUILD}
-  cmake $REPO/llvm
-  echo done
-  cmake ${BUILD_FLAGS}
-}
 
-make_new_build_dir "123871238912371203"
-config_cmake
+  if [ $VERBOSE -eq 0 ]
+  then
+    cmake "$REPO/llvm"
+    cmake "${BUILD_FLAGS}"
+  else
+    echo -n Configuring cmake...
+    out=$(cmake "$REPO/llvm" &>/dev/null)
+    out=$(cmake "${BUILD_FLAGS}" &>/dev/null)
+    echo done
+  fi
+}

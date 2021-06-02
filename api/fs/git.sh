@@ -44,5 +44,3 @@ checkout_commit() {
   exit_error_not "$LCOMMIT" "$1" "Local repo already rebased to this commit! ($LCOMMIT)"
   echo done
 }
-
-checkout_commit "$1"
