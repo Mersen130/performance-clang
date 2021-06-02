@@ -38,7 +38,7 @@ make_new_build_dir() {
 config_cmake() {
   cd ${BUILD}
 
-  if [ $VERBOSE -eq 0 ]
+  if [ $VERBOSE -eq 1 ]
   then
     cmake "$REPO/llvm"
     cmake "${BUILD_FLAGS}"
