@@ -21,9 +21,15 @@ $ source env/bin/activate
 
 Run the main script with the following usage (only supply either -r or -g)
 ```shell
-$ python3 main.py -r RUN_NUM -g GIT_HASH [-v|--verbose]
+$ python3 main.py -r RUN_NUM -g GIT_HASH -j JOBS [-v|--verbose] 
 ```
-where `-v` or `--verbose` provides verbose output and `-h` displays the above help message.
+where
+`-r RUN_NUM` or `--run-num=RUN_NUM` the LNT run number (will be converted to a git hash)
+`-g GIT_HASH` or `--git-hash=GIT_HASH` the llvm hash 
+`-v` or `--verbose` provides verbose output
+`j JOBS` or `--jobs JOBS` provides the number of make jobs, default is 20
+`-h` displays the above help message
+
 
 A build directory will be created in /localdata/ROP\_CSC499/builds with the
 following name: `YYYY-mm-dd\_HH-MM-SS\_{first 6 digits of the git hash}`

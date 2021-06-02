@@ -21,9 +21,9 @@ if __name__ == '__main__':
             sys.exit(1)
 
         print('found ({})'.format(git_hash))
-        r.checkout_commit(git_hash, ap.verbose)
+        r.checkout_commit(git_hash, ap.verbose, ap.jobs)
     elif ap.git_hash:
         print('Checking out {}'.format(ap.git_hash))
-        r.checkout_commit(ap.git_hash, ap.verbose)
+        r.checkout_commit(ap.git_hash, ap.verbose, ap.jobs)
 
     sys.exit(0)

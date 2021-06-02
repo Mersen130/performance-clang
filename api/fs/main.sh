@@ -11,8 +11,9 @@
 # Globals
 HASH=$1
 VERBOSE=$2
+JOBS=$3
 
 checkout_commit "$HASH"
 make_new_build_dir "$HASH"
 config_cmake
-
+run_make

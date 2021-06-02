@@ -49,3 +49,9 @@ config_cmake() {
     echo done
   fi
 }
+
+# Run make with desired jobs
+run_make() {
+  cd ${BUILD}
+  make -j $JOBS
+}
