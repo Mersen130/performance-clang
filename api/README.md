@@ -5,11 +5,8 @@ These scripts locate a git hash from the LNT site by a run number (or if a
 git hash is supplied, this is skipped) and reverts the llvm repo to this
 desired commit.
 
-Our changes are then rebased on top of the commit and our testing suite is then
-run with the output logged.
-
-The purpose of this is to streamline local testing of one or more commits once
-we have hand picked (or computer picked) specific commits.
+Then, a build folder is generated with a cmake configuration to be compiled.
+Once compiled, this does nothing. Soon, it will run the testing suite.
 
 ## Usage
 First navigate to the api directory
