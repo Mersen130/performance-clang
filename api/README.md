@@ -11,6 +11,32 @@ run with the output logged.
 The purpose of this is to streamline local testing of one or more commits once
 we have hand picked (or computer picked) specific commits.
 
+## Usage
+First navigate to the api directory
+```shell
+$ cd api
+```
+
+Source the virtualenv
+```shell
+$ source env/bin/activate
+```
+
+Run the main script with the following usage (only supply either -r or -g)
+```shell
+$ python3 main.py -r RUN_NUM -g GIT_HASH [-v|--verbose]
+```
+where `-v` or `--verbose` provides verbose output and `-h` displays the above help message.
+
+A build directory will be created in /localdata/ROP\_CSC499/builds with the
+following name: `YYYY-mm-dd\_HH-MM-SS\_{first 6 digits of the git hash}`
+
+# Warning
+This script modifies the localdata/llvm repo, that is, if you supply a run num
+or a git hash to the main python script, it will checkout said commit in the
+llvm project, so be sure not to run this whilst others are compiling or using 
+the repo.
+
 ## TODO
 [ ] Execute compile scripts once commit is rebased
 [ ] Execute testing suite once new bin is ready
