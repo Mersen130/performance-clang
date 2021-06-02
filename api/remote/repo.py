@@ -1,5 +1,5 @@
 
-from constants import REPO_DIR
+from remote.constants import REPO_DIR
 import subprocess
 
 class Repo:

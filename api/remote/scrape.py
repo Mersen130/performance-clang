@@ -2,7 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from constants import LNT_URL
+from remote.constants import LNT_URL
 
 def get_hash_from_run(run):
     page = requests.get(LNT_URL.format(run))
