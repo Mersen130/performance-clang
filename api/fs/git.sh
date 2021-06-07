@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Imports
-. ./local/constants.sh
-. ./local/util.sh
+. ./fs/constants.sh
+. ./fs/util.sh
 
 ###############################################################################
 # All the git related commands and functions.                                 #
@@ -44,5 +44,3 @@ checkout_commit() {
   exit_error_not "$LCOMMIT" "$1" "Local repo already rebased to this commit! ($LCOMMIT)"
   echo done
 }
-
-checkout_commit "$1"
