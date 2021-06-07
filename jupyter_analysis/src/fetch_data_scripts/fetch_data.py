@@ -27,13 +27,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 MODE = os.getenv("MODE")  # no graphical output iff MODE=text
+url = os.getenv("MODE")
 
 
 # In[55]:
 
 
 # update me
-url = "http://104.154.54.203/db_default/v4/nts/graph?highlight_run=145241&plot.1605785=1364.1605785.3"
+
 filename = "../../data/" + str(int(hashlib.sha256(url.encode('utf-8')).hexdigest()[:16],
                   16)-2**63)
 # print("cached filename:", filename)
