@@ -1,0 +1,13 @@
+hashlib
+re
+requests
+json
+datetime
+dateutil
+html
+matplotlib
+pandas
+numpy
+csv
+os
+python-dotenv
