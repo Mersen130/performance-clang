@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[46]:
+# In[1]:
 
 
 import hashlib
@@ -22,33 +22,15 @@ import os
 from dotenv import load_dotenv
 
 
-# In[48]:
+# In[2]:
 
 
 load_dotenv()
 MODE = os.getenv("MODE")  # no graphical output iff MODE=text
-url = os.getenv("MODE")
+url = os.getenv("URL")
 
 
-# In[55]:
-
-
-# update me
-
-filename = "../../data/" + str(int(hashlib.sha256(url.encode('utf-8')).hexdigest()[:16],
-                  16)-2**63)
-# print("cached filename:", filename)
-
-if not path.exists(filename):
-    payload = {}
-
-    response = requests.request("GET", url, data=payload)
-
-    with open(filename, "w") as f:
-        f.write(response.text)
-
-
-# In[51]:
+# In[3]:
 
 
 class MyHTMLParser(HTMLParser):
@@ -75,7 +57,7 @@ class MyHTMLParser(HTMLParser):
 
 
 
-# In[56]:
+# In[4]:
 
 
 def filter_by_date(points):
@@ -84,8 +66,55 @@ def filter_by_date(points):
     return [p for p in points if p[2] > one_month]
 
 
-# In[57]:
+# In[36]:
 
+
+commit2state = {}
+for page in range(130):
+    # fetch Buildkite data
+    buildkite_url = "https://buildkite.com/llvm-project/llvm-main/builds?branch=main&page={}".format(page)
+    buildkite_filename = "../../data/" + str(int(hashlib.sha256(buildkite_url.encode('utf-8')).hexdigest()[:16],
+                      16)-2**63)
+
+    if not path.exists(buildkite_filename):
+        payload = {}
+
+        response = requests.request("GET", buildkite_url, data=payload)
+
+        with open(buildkite_filename, "w") as f:
+            f.write(response.text)
+
+    with open(buildkite_filename, "r") as f:
+        with open("../../data/buildkite_history.txt", "a") as f2:
+            for line in f:
+                if "var store = new BuildStore({\"id\":" in line:
+                    line = line.strip()
+                    line = line.replace("var store = new BuildStore(", "[")
+                    line = line[:-1] + "]"
+                    open("untitled.txt", "w").write(line)
+                    buildkite_data = json.loads(line)[1]
+
+                    for build in buildkite_data:
+                        commit2state[build['commit_id']] = build['state']
+                        f2.write("{} {}\n".format(build['commit_id'], build['state']))
+                    break
+
+
+# In[44]:
+
+
+filename = "../../data/" + str(int(hashlib.sha256(url.encode('utf-8')).hexdigest()[:16],
+                  16)-2**63)
+# print("cached filename:", filename)
+
+# fetch lnt data
+if not path.exists(filename):
+    payload = {}
+
+    response = requests.request("GET", url, data=payload)
+
+    with open(filename, "w") as f:
+        f.write(response.text)
 
 with open(filename, "r") as f:
     # parser = MyHTMLParser()
@@ -93,18 +122,23 @@ with open(filename, "r") as f:
     for line in f:
         if "overview_plots" in line:
             line = line.strip()
-            # print(line)
+#             print(line)
             values = re.findall(r'var.*?=\s*(.*?);', line, re.DOTALL |
                                 re.MULTILINE)
-            # print((values[0][:10]))
+#             print((values[0][:10]))
             points = json.loads(values[0])
             points = points[0]["data"]  # a list of data points
             
             # convert string dates to manipulatable datetimes
+            temp_points = []
+
             for p in points:
-                p[2]["date"] = datetime.datetime.strptime(p[2]["date"], '%Y-%m-%d %H:%M:%S')
-                p.insert(2, p[2]["date"])
-                del p[3]["date"]
+                if commit2state.get(p[2]["label"], "failed") == "passed":
+                    p[2]["date"] = datetime.datetime.strptime(p[2]["date"], '%Y-%m-%d %H:%M:%S')
+                    p.insert(2, p[2]["date"])
+                    del p[3]["date"]
+                    temp_points.append(p)
+            points = temp_points
             
             with open(filename + ".csv", 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
@@ -125,7 +159,7 @@ with open(filename, "r") as f:
             break
 
 
-# In[58]:
+# In[45]:
 
 
 def plot_seq():
@@ -164,7 +198,7 @@ if MODE != "text":
     plot_seq()
 
 
-# In[61]:
+# In[46]:
 
 
 # Iterative Binary Search Function
@@ -199,6 +233,7 @@ def plot_date():
     points_1_week.sort(key=lambda p: p[2])
     dates = [p[2] for p in points_1_week]
     ys = [p[1] for p in points_1_week]
+#     print(dates, ys)
 
     max_diff = float("-inf")
     last = None
