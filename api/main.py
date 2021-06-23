@@ -10,7 +10,13 @@ if __name__ == '__main__':
     ap.parse_args()
 
     r = Repo()
-    if ap.run_num:
+    if ap.stdin:
+        for line in sys.stdin:
+            if len(line) == 0:
+                pass
+            for hash in line.split(','):
+                r.checkout_commit(hash.strip(), ap.verbose, ap.jobs)
+    elif ap.is_run_num:
         sys.stdout.write('Finding git hash for run {}...'.format(ap.run_num))
         sys.stdout.flush()
         git_hash = get_hash_from_run(ap.run_num)
@@ -22,8 +28,12 @@ if __name__ == '__main__':
 
         print('found ({})'.format(git_hash))
         r.checkout_commit(git_hash, ap.verbose, ap.jobs)
-    elif ap.git_hash:
-        print('Checking out {}'.format(ap.git_hash))
-        r.checkout_commit(ap.git_hash, ap.verbose, ap.jobs)
+    elif ap.is_git_hash:
+        for hash in ap.git_hashes:
+            sys.stdout.write('Verifying {} builds...'.format(hash))
+            sys.stdout.flush()
+
+            print('done (TODO actually scrape and check this...)')
+            r.checkout_commit(hash, ap.verbose, ap.jobs)
 
     sys.exit(0)

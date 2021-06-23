@@ -41,6 +41,8 @@ checkout_commit() {
   verify_commit_exists "$1"
 
   echo -n "Verifying repository isn't already based at desired commit..."
-  exit_error_not "$LCOMMIT" "$1" "Local repo already rebased to this commit! ($LCOMMIT)"
   echo done
+
+  git "$GIT_FLAG" checkout -- .
+  git "$GIT_FLAG" checkout "$1" 
 }
