@@ -6,7 +6,6 @@ datetime
 dateutil
 html
 matplotlib
-pandas
 numpy
 csv
 os
