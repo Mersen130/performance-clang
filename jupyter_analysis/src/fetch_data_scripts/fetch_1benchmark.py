@@ -17,6 +17,10 @@ import matplotlib.pyplot as plt
 import csv
 import os
 from dotenv import load_dotenv
+from numpy import arange
+import numpy as np
+from scipy.signal import argrelextrema
+from scipy.optimize import curve_fit
 
 
 # In[2]:
@@ -240,7 +244,7 @@ def plot_seq():
             if abs(last - ys[i]) > 0.8 * max_diff:
                 print("{}, {}".format(points_filtered[binary_search(points_filtered, xs[i - 1])][3]["label"], points_filtered[binary_search(points_filtered, xs[i])][3]["label"]))
 
-plot_seq()
+# plot_seq()
 
 
 # In[9]:
@@ -305,10 +309,45 @@ def plot_date():
             if abs(last - ys[i]) > 0.8 * max_diff:
                 print("{}, {}".format(points_filtered[binary_search(points_filtered, dates[i - 1])][3]["label"], points_filtered[binary_search(points_filtered, dates[i])][3]["label"]))
     
-plot_date()
+# plot_date()
 
 
 # In[10]:
+
+
+# define the true objective function
+def objective(x, a, b, c, d):
+    return a * x**3 + b * x**2 + c * x + d
+
+def parabola_best_fit(xs, ys):
+
+    # curve fit
+    popt, _ = curve_fit(objective, xs, ys)
+    # summarize the parameter values
+    a, b, c, d = popt
+    
+    if MODE != "text":
+        print('y = %.5f * x^3 + %.5f * x^2 + %.5f * x + %.5f' % (a, b, c, d))
+        
+        fig = plt.figure(figsize=(20,12))
+        plt.scatter(xs, ys)  # data points
+        # define a sequence of inputs between the smallest and largest known inputs
+        x_line = arange(min(xs), max(xs), 1)
+        # calculate the output for the range
+        y_line = objective(x_line, a, b, c, d)
+        # create a line plot for the mapping function
+        plt.plot(x_line, y_line, '--', color='red')  # curve fit
+        plt.title("Execution Time Moving Average", fontsize=22)
+        plt.xlabel("", fontsize=18)
+        plt.ylabel("Moving Average", fontsize=18)
+        # ax1 = plt.legend(["100 day SMA"],prop={"size":20}, loc="upper left")
+        plt.grid(True)
+#         plt.show()
+
+    return a, b, c, d
+
+
+# In[14]:
 
 
 def binary_search(arr, x):
@@ -335,76 +374,66 @@ def binary_search(arr, x):
     # If we reach here, then the element was not present
     return -1
 
+def geo_mean(iterable):
+    a = np.array(iterable)
+    return a.prod()**(1.0/len(a))
+
+window = 10  # size of the sliding window
 
 def plot_ma_seq():
     
-    window = 10  # size of the sliding window
     points_filtered.sort(key=lambda p: p[0])
     ys = []
     for p in range(0, len(points_filtered) - window, 5):
         sample = points_filtered[p:p+window]
-        ys.append(sum([s[1] for s in sample])/len(sample))
+        ys.append(geo_mean([s[1] for s in sample]))
         
     xs = [i for i in range(len(ys))]
-#     ys = points_df["execution time"].groupby(np.arange(len(points_df))//10).mean()
-#     xs = [10*i for i in range(len(ys))]
-#     plt.style.use('seaborn-dark')
-#     plt.style.use("tableau-colorblind10")
 
+    # find parabola of best fit
+    # a * x^3 + b * x^2 + c * x + d
+    a, b, c, d = parabola_best_fit(xs, ys)
+    
+    zs = [objective(x, a, b, c, d) for x in xs]
     if MODE != "text":
-
-        fig = plt.figure(figsize=(20,12))
-        ax1 = plt.plot(xs, ys)
-        ax1 = plt.title("Execution Time Moving Average", fontsize=22)
-        ax1 = plt.xlabel("", fontsize=18)
-        ax1 = plt.ylabel("Moving Average", fontsize=18)
-        # ax1 = plt.legend(["100 day SMA"],prop={"size":20}, loc="upper left")
-        plt.grid(True)
+        plt.scatter(xs, zs, color="black")  # project data points onto the curve
         plt.show()
 
-    max_diff = float("-inf")
-    last = None
-    for i in range(len(ys)):
-        if not last:
-            last = ys[i]
-        else:
-            if abs(last - ys[i]) > max_diff:
-                max_diff = abs(last - ys[i])
-                
-    if path.exists("results/analysis/" + filename + "_analysis_seq.txt"):
-        os.remove("results/analysis/" + filename + "_analysis_seq.txt")
-        
-    last = None
-    for i in range(len(ys)):
-        if not last:
-            last = ys[i]
-        else:
-            if abs(last - ys[i]) > 0.8 * max_diff:
-#                 print(xs[i])
-#                 print("{}, {}".format(xs[i - 1], xs[i])) TODO
-                last_group = [points_filtered[x] for x in range(5*xs[i-1], 5*xs[i-1] + window)]
-                curr_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
-                
-                with open("results/analysis/" + filename + "_analysis_seq.txt", "a") as f:
-                    #. write analysis
-                    f.write("first group: {}\nsecond group: {}\n\n".format([p[3]["label"] for p in last_group], [p[3]["label"] for p in curr_group]))
-                    
-                if last - ys[i] > 0:
-                    # graph trending downward
-                    last_group_min = max(last_group, key=lambda x: x[1])
-                    curr_group_min = min(curr_group, key=lambda x: x[1])
-                else:
-                    # graph trending upward
-                    last_group_min = min(last_group, key=lambda x: x[1])
-                    curr_group_min = max(curr_group, key=lambda x: x[1])
-                    
-                print("{}, {}".format(last_group_min[3]["label"], curr_group_min[3]["label"]))
-                
-                
+    # for local maxima
+    maxima = argrelextrema(np.array(zs), np.greater)
+
+    # for local minima
+    minima = argrelextrema(np.array(zs), np.less)
+    
+    pair = find_pairs(xs, ys, maxima, minima)
+    print(pair[0], pair[1])
+
+
+def find_pairs(xs, ys, maxima, minima):
+    if maxima[0] < minima[0]:
+        # trending downwards
+        i = int(maxima[0][0])
+        j = int(minima[0][0])
+        first_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
+        second_group = [points_filtered[x] for x in range(5*xs[j], 5*xs[j] + window)]
+        first_group_max = max(first_group, key=lambda x: x[1])
+        second_group_min = min(second_group, key=lambda x: x[1])
+        return first_group_max[3]["label"], second_group_min[3]["label"]
+    else:
+        # trending upwards
+        j = int(maxima[0][0])
+        i = int(minima[0][0])
+        first_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
+        second_group = [points_filtered[x] for x in range(5*xs[j], 5*xs[j] + window)]
+        first_group_min = min(first_group, key=lambda x: x[1])
+        second_group_max = max(second_group, key=lambda x: x[1])
+        return first_group_min[3]["label"], second_group_max[3]["label"]
+
 plot_ma_seq()
+# print(url)
 
 
-# In[11]:
+# In[12]:
 
 
 def plot_ma_date():
@@ -465,6 +494,5 @@ def plot_ma_date():
                     
                 print("{}, {}".format(last_group_min[3]["label"], curr_group_min[3]["label"]))
                 
-if MODE != "text":
-    plot_ma_date()
+# plot_ma_date()
 
