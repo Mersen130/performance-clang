@@ -37,10 +37,18 @@ verify_commit_exists() {
 # 
 # 1: the commit to checkout
 checkout_commit() {
+  cd $REPO
   get_top_commit
   verify_commit_exists "$1"
 
   echo -n "Verifying repository isn't already based at desired commit..."
-  exit_error_not "$LCOMMIT" "$1" "Local repo already rebased to this commit! ($LCOMMIT)"
   echo done
+
+  echo -n "Unstaging any changes..."
+  git fetch origin
+  git reset --hard origin/main
+  echo done
+
+  cd $PWD
+  git "$GIT_FLAG" checkout "$1" 
 }
