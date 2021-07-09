@@ -30,6 +30,7 @@ load_dotenv()
 MODE = os.getenv("MODE")  # no graphical output iff MODE=text
 # MODE = "haha"
 url = os.getenv("URL")
+# url = "http://104.154.54.203/db_default/v4/nts/graph?highlight_run=147402&plot.1605933=1364.1605933.3"
 
 
 # In[3]:
@@ -316,25 +317,25 @@ def plot_date():
 
 
 # define the true objective function
-def objective(x, a, b, c, d):
-    return a * x**3 + b * x**2 + c * x + d
+def objective(x, a, b, c, d, e):
+    return a * x**4 + b * x**3 + c * x**2 + d * x + e
 
 def parabola_best_fit(xs, ys):
 
     # curve fit
     popt, _ = curve_fit(objective, xs, ys)
     # summarize the parameter values
-    a, b, c, d = popt
+    a, b, c, d, e = popt
     
     if MODE != "text":
-        print('y = %.5f * x^3 + %.5f * x^2 + %.5f * x + %.5f' % (a, b, c, d))
+        print('y = %f * x^4 + %f * x^3 + %f * x^2 + %f * x + %f' % (a, b, c, d, e))
         
         fig = plt.figure(figsize=(20,12))
         plt.scatter(xs, ys)  # data points
         # define a sequence of inputs between the smallest and largest known inputs
         x_line = arange(min(xs), max(xs), 1)
         # calculate the output for the range
-        y_line = objective(x_line, a, b, c, d)
+        y_line = objective(x_line, a, b, c, d, e)
         # create a line plot for the mapping function
         plt.plot(x_line, y_line, '--', color='red')  # curve fit
         plt.title("Execution Time Moving Average", fontsize=22)
@@ -344,10 +345,10 @@ def parabola_best_fit(xs, ys):
         plt.grid(True)
 #         plt.show()
 
-    return a, b, c, d
+    return a, b, c, d, e
 
 
-# In[14]:
+# In[13]:
 
 
 def binary_search(arr, x):
@@ -392,9 +393,9 @@ def plot_ma_seq():
 
     # find parabola of best fit
     # a * x^3 + b * x^2 + c * x + d
-    a, b, c, d = parabola_best_fit(xs, ys)
+    a, b, c, d, e = parabola_best_fit(xs, ys)
     
-    zs = [objective(x, a, b, c, d) for x in xs]
+    zs = [objective(x, a, b, c, d, e) for x in xs]
     if MODE != "text":
         plt.scatter(xs, zs, color="black")  # project data points onto the curve
         plt.show()
@@ -405,29 +406,61 @@ def plot_ma_seq():
     # for local minima
     minima = argrelextrema(np.array(zs), np.less)
     
-    pair = find_pairs(xs, ys, maxima, minima)
+    pair = find_pairs(xs, ys, maxima, minima, zs)
     print(pair[0], pair[1])
 
 
-def find_pairs(xs, ys, maxima, minima):
-    if maxima[0] < minima[0]:
-        # trending downwards
-        i = int(maxima[0][0])
-        j = int(minima[0][0])
+
+def find_pairs(xs, ys, maxima, minima, zs):
+    
+    try:
+        if len(minima[0]) == 0:
+            i = int(maxima[0][0])
+            j = int(maxima[0][1])
+            first_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
+            second_group = [points_filtered[x] for x in range(5*xs[j], 5*xs[j] + window)]
+            first_group_max = max(first_group, key=lambda x: x[1])
+            second_group_min = min(second_group, key=lambda x: x[1])
+            return first_group_max[3]["label"], second_group_min[3]["label"]
+
+        elif len(maxima[0]) == 0:
+            i = int(minima[0][0])
+            j = int(minima[0][1])
+            first_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
+            second_group = [points_filtered[x] for x in range(5*xs[j], 5*xs[j] + window)]
+            first_group_max = max(first_group, key=lambda x: x[1])
+            second_group_min = min(second_group, key=lambda x: x[1])
+            return first_group_max[3]["label"], second_group_min[3]["label"]
+
+        if maxima[0][0] < minima[0][0]:
+            # trending downwards
+            i = int(maxima[0][0])
+            j = int(minima[0][0])
+            first_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
+            second_group = [points_filtered[x] for x in range(5*xs[j], 5*xs[j] + window)]
+            first_group_max = max(first_group, key=lambda x: x[1])
+            second_group_min = min(second_group, key=lambda x: x[1])
+            return first_group_max[3]["label"], second_group_min[3]["label"]
+        else:
+            # trending upwards
+            j = int(maxima[0][0])
+            i = int(minima[0][0])
+            first_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
+            second_group = [points_filtered[x] for x in range(5*xs[j], 5*xs[j] + window)]
+            first_group_min = min(first_group, key=lambda x: x[1])
+            second_group_max = max(second_group, key=lambda x: x[1])
+            return first_group_min[3]["label"], second_group_max[3]["label"]
+    except e:
+        plt.scatter(xs, zs, color="black")  # project data points onto the curve
+        plt.grid(True)
+        plt.show()
+        i = int(input("x1: "))
+        j = int(input("x2: "))
         first_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
         second_group = [points_filtered[x] for x in range(5*xs[j], 5*xs[j] + window)]
         first_group_max = max(first_group, key=lambda x: x[1])
         second_group_min = min(second_group, key=lambda x: x[1])
         return first_group_max[3]["label"], second_group_min[3]["label"]
-    else:
-        # trending upwards
-        j = int(maxima[0][0])
-        i = int(minima[0][0])
-        first_group = [points_filtered[x] for x in range(5*xs[i], 5*xs[i] + window)]
-        second_group = [points_filtered[x] for x in range(5*xs[j], 5*xs[j] + window)]
-        first_group_min = min(first_group, key=lambda x: x[1])
-        second_group_max = max(second_group, key=lambda x: x[1])
-        return first_group_min[3]["label"], second_group_max[3]["label"]
 
 plot_ma_seq()
 # print(url)
