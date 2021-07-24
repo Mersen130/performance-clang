@@ -1,6 +1,0 @@
-var a=[{
-    "id": "cab56bb9-fd68-42cf-9cca-a53de7f2106f",
-    "state": "started",
-    "blocked_state": null,
-    "message": "Scheduled build",
-    "number": 2766}];
